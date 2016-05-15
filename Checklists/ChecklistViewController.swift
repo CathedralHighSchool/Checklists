@@ -8,7 +8,7 @@
 
 import UIKit
 
-class ChecklistViewController: UITableViewController {
+class ChecklistViewController: UITableViewController, AddItemViewControllerDelegate {
 
   var items: [ChecklistItem]
   
@@ -41,8 +41,8 @@ class ChecklistViewController: UITableViewController {
     items.append(row4item)
     
     let row5item = ChecklistItem()
-    row4item.text = "Read a book"
-    row4item.checked = false
+    row5item.text = "Read a book"
+    row5item.checked = false
     items.append(row5item)
     
     super.init(coder: aDecoder)
@@ -53,21 +53,32 @@ class ChecklistViewController: UITableViewController {
     // Do any additional setup after loading the view, typically from a nib.
   }
   
+  // MARK: - Methods
+  
+  // Set the text for the cell
   func configureTextForCell(cell: UITableViewCell, withCheckListItem item: ChecklistItem) {
     let label = cell.viewWithTag(1000) as! UILabel
     label.text = item.text
   }
-
+  
+  // Set checkmark for cell
   func configureCheckmarkForCell(cell: UITableViewCell, withChecklistItem item: ChecklistItem) {
-
     if item.checked {
       cell.accessoryType = .Checkmark
     } else {
       cell.accessoryType = .None
     }
   }
+
+  override func prepareForSegue(segue: UIStoryboardSegue, sender: AnyObject?) {
+    if segue.identifier == "AddItem" {
+      let navigationController = segue.destinationViewController as! UINavigationController
+      let controller = navigationController.topViewController as! AddItemViewController
+      controller.delegate = self
+    }
+  }
   
-  // MARK: Table View Data Source
+  // MARK: - Table View Data Source
   override func tableView(tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
     return items.count
   }
@@ -81,6 +92,12 @@ class ChecklistViewController: UITableViewController {
     return cell
   }
   
+  override func tableView(tableView: UITableView, commitEditingStyle editingStyle: UITableViewCellEditingStyle, forRowAtIndexPath indexPath: NSIndexPath) {
+    items.removeAtIndex(indexPath.row)
+    let indexPaths = [indexPath]
+    tableView.deleteRowsAtIndexPaths(indexPaths, withRowAnimation: .Automatic)
+  }
+  
   // MARK: Table View Delegate
   override func tableView(tableView: UITableView, didSelectRowAtIndexPath indexPath: NSIndexPath) {
     if let cell = tableView.cellForRowAtIndexPath(indexPath) {
@@ -90,6 +107,26 @@ class ChecklistViewController: UITableViewController {
       configureCheckmarkForCell(cell, withChecklistItem: item)
     }
     tableView.deselectRowAtIndexPath(indexPath, animated: true)
+  }
+  
+  // MARK: Add Item View Controller Delegate
+  func addItemViewControllerDidCancel(controller: AddItemViewController) {
+    dismissViewControllerAnimated(true, completion: nil)
+  }
+  
+  func addItemViewController(controller: AddItemViewController, didFinishAddingItem item: ChecklistItem) {
+    // Calculate what the index of the new row in the array should be, then add new item to array
+    let newRowIndex = items.count
+    items.append(item)
+    
+    // Make an NSIndexPath object that points to the new row
+    let indexPath = NSIndexPath(forRow: newRowIndex, inSection: 0)
+    let indexPaths = [indexPath]
+    
+    // Tell table view to insert the new row
+    tableView.insertRowsAtIndexPaths(indexPaths, withRowAnimation: .Automatic)
+    
+    dismissViewControllerAnimated(true, completion: nil)
   }
 
 }
