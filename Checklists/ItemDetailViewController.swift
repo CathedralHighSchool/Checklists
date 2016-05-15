@@ -1,5 +1,5 @@
 //
-//  AddItemViewController.swift
+//  ItemDetailViewController.swift
 //  Checklists
 //
 //  Created by Marisa Toodle on 5/14/16.
@@ -9,20 +9,32 @@
 import Foundation
 import UIKit
 
-protocol AddItemViewControllerDelegate: class {
-  func addItemViewControllerDidCancel(controller: AddItemViewController)
-  func addItemViewController(controller: AddItemViewController, didFinishAddingItem item: ChecklistItem)
+protocol ItemDetailViewControllerDelegate: class {
+  func itemDetailViewControllerDidCancel(controller: ItemDetailViewController)
+  func itemDetailViewController(controller: ItemDetailViewController, didFinishAddingItem item: ChecklistItem)
+  func itemDetailViewController(controller: ItemDetailViewController, didFinishEditingItem item: ChecklistItem)
 }
 
-class AddItemViewController: UITableViewController, UITextFieldDelegate {
+class ItemDetailViewController: UITableViewController, UITextFieldDelegate {
   
-  // MARK: Outlets
+  // MARK: Properties
   @IBOutlet weak var textField: UITextField!
   @IBOutlet weak var doneBarButton: UIBarButtonItem!
   
-  weak var delegate: AddItemViewControllerDelegate?
+  weak var delegate: ItemDetailViewControllerDelegate?
+  var itemToEdit: ChecklistItem?
   
   // MARK: View Controller Lifecycle
+  override func viewDidLoad() {
+    super.viewDidLoad()
+    
+    if let item = itemToEdit {
+      title = "Edit Item"
+      textField.text = item.text
+      doneBarButton.enabled = true
+    }
+  }
+  
   override func viewWillAppear(animated: Bool) {
     super.viewWillAppear(animated)
     textField.becomeFirstResponder() // Display keyboard when view appears
@@ -31,16 +43,21 @@ class AddItemViewController: UITableViewController, UITextFieldDelegate {
   // MARK: Actions
   @IBAction func cancel() {
     textField.resignFirstResponder()
-    delegate?.addItemViewControllerDidCancel(self)
+    delegate?.itemDetailViewControllerDidCancel(self)
   }
   
   @IBAction func done() {
     textField.resignFirstResponder()
-    let item = ChecklistItem()
-    item.text = textField.text!
-    item.checked = false
-    
-    delegate?.addItemViewController(self, didFinishAddingItem: item)
+    if let item = itemToEdit {
+      item.text = textField.text!
+      delegate?.itemDetailViewController(self, didFinishEditingItem: item)
+    } else {
+      let item = ChecklistItem()
+      item.text = textField.text!
+      item.checked = false
+      
+      delegate?.itemDetailViewController(self, didFinishAddingItem: item)
+    }
   }
   
   // MARK: Table View Delegate
