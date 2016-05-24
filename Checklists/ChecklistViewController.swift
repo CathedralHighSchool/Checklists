@@ -11,19 +11,21 @@ import UIKit
 class ChecklistViewController: UITableViewController, ItemDetailViewControllerDelegate {
 
   var items: [ChecklistItem]
+  var checklist: Checklist!
   
   required init?(coder aDecoder: NSCoder) {
     items = [ChecklistItem]()
-    super.init(coder: aDecoder)
-    loadChecklistItems()
     
+    super.init(coder: aDecoder)
+    
+    loadChecklistItems()
     print("Documents folder is \(documentsDirectory())")
     print("Data file path is \(dataFilePath())")
   }
   
   override func viewDidLoad() {
     super.viewDidLoad()
-    // Do any additional setup after loading the view, typically from a nib.
+    title = checklist.name
   }
   
   // MARK: - Methods
