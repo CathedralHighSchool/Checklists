@@ -8,27 +8,26 @@
 
 import UIKit
 
-class AllListsViewController: UITableViewController, ListDetailViewControllerDelegate {
+class AllListsViewController: UITableViewController, ListDetailViewControllerDelegate, UINavigationControllerDelegate {
   
-  var lists: [Checklist]
+  var dataModel: DataModel!
   
-  required init?(coder aDecoder: NSCoder) {
-    lists = [Checklist]()
-    
-    super.init(coder: aDecoder)
-    
-    var list = Checklist(name: "Birthdays")
-    lists.append(list)
-    list = Checklist(name: "Groceries")
-    lists.append(list)
-    list = Checklist(name: "Cool Apps")
-    lists.append(list)
-    list = Checklist(name: "To Do")
-    lists.append(list)
-  }
-
+  
+  // MARK: View Controller Lifecycle
   override func viewDidLoad() {
       super.viewDidLoad()
+  }
+  
+  override func viewDidAppear(animated: Bool) {
+    super.viewDidAppear(animated)
+    navigationController?.delegate = self
+    
+    let index = dataModel.indexOfSelectedChecklist
+    // Determine if index is valid, if not do not segue
+    if index >= 0 && index < dataModel.lists.count {
+      let checklist = dataModel.lists[index]
+      performSegueWithIdentifier("ShowChecklist", sender: checklist)
+    }
   }
   
   override func prepareForSegue(segue: UIStoryboardSegue, sender: AnyObject?) {
@@ -57,7 +56,7 @@ class AllListsViewController: UITableViewController, ListDetailViewControllerDel
 
   override func tableView(tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
       // #warning Incomplete implementation, return the number of rows
-      return lists.count
+      return dataModel.lists.count
   }
 
   override func tableView(tableView: UITableView, cellForRowAtIndexPath indexPath: NSIndexPath) -> UITableViewCell {
@@ -65,7 +64,7 @@ class AllListsViewController: UITableViewController, ListDetailViewControllerDel
 
     let cell = cellForTableView(tableView)
     
-    let checklist = lists[indexPath.row]
+    let checklist = dataModel.lists[indexPath.row]
     cell.textLabel!.text = checklist.name
     cell.accessoryType = .DetailDisclosureButton
 
@@ -73,7 +72,7 @@ class AllListsViewController: UITableViewController, ListDetailViewControllerDel
   }
   
   override func tableView(tableView: UITableView, commitEditingStyle editingStyle: UITableViewCellEditingStyle, forRowAtIndexPath indexPath: NSIndexPath) {
-    lists.removeAtIndex(indexPath.row)
+    dataModel.lists.removeAtIndex(indexPath.row)
     
     let indexPaths = [indexPath]
     tableView.deleteRowsAtIndexPaths(indexPaths, withRowAnimation: .Automatic)
@@ -82,7 +81,9 @@ class AllListsViewController: UITableViewController, ListDetailViewControllerDel
   // MARK: Table View Delegate Methods
   
   override func tableView(tableView: UITableView, didSelectRowAtIndexPath indexPath: NSIndexPath) {
-    let checklist = lists[indexPath.row]
+    dataModel.indexOfSelectedChecklist = indexPath.row
+    
+    let checklist = dataModel.lists[indexPath.row]
     performSegueWithIdentifier("ShowChecklist", sender: checklist)
   }
   
@@ -91,7 +92,7 @@ class AllListsViewController: UITableViewController, ListDetailViewControllerDel
     let controller = navigationController.topViewController as! ListDetailViewController
     
     controller.delegate = self
-    let checklist = lists[indexPath.row]
+    let checklist = dataModel.lists[indexPath.row]
     controller.checklistToEdit = checklist
     
     presentViewController(navigationController, animated: true, completion: nil)
@@ -104,9 +105,9 @@ class AllListsViewController: UITableViewController, ListDetailViewControllerDel
   }
   
   func listDetailViewController(controller: ListDetailViewController, didFinishAddingChecklist checklist: Checklist) {
-      let newRowIndex = lists.count
+      let newRowIndex = dataModel.lists.count
       
-      lists.append(checklist)
+      dataModel.lists.append(checklist)
       
       let indexPath = NSIndexPath(forRow: newRowIndex, inSection: 0)
       let indexPaths = [indexPath]
@@ -116,13 +117,21 @@ class AllListsViewController: UITableViewController, ListDetailViewControllerDel
   }
   
   func listDetailViewController(controller: ListDetailViewController, didFinishEditingChecklist checklist: Checklist) {
-    if let index = lists.indexOf(checklist) {
+    if let index = dataModel.lists.indexOf(checklist) {
       let indexPath = NSIndexPath(forRow: index, inSection: 0)
       if let cell = tableView.cellForRowAtIndexPath(indexPath) {
         cell.textLabel!.text = checklist.name
       }
     }
     dismissViewControllerAnimated(true, completion: nil)
+  }
+  
+  // MARK: - UINavigationController Delegate Methods
+  // If the back button was pressed, the new view controller is AllListsViewController itself and you set the “ChecklistIndex” value in NSUserDefaults to -1, meaning that no checklist is currently selected.
+  func navigationController(navigationController: UINavigationController, willShowViewController viewController: UIViewController, animated: Bool) {
+    if viewController === self {
+      dataModel.indexOfSelectedChecklist = -1
+    }
   }
   
 }
