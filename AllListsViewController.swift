@@ -15,7 +15,12 @@ class AllListsViewController: UITableViewController, ListDetailViewControllerDel
   
   // MARK: View Controller Lifecycle
   override func viewDidLoad() {
-      super.viewDidLoad()
+    super.viewDidLoad()
+  }
+  
+  override func viewWillAppear(animated: Bool) {
+    super.viewWillAppear(animated)
+    tableView.reloadData()
   }
   
   override func viewDidAppear(animated: Bool) {
@@ -48,7 +53,7 @@ class AllListsViewController: UITableViewController, ListDetailViewControllerDel
     if let cell = tableView.dequeueReusableCellWithIdentifier(cellIdentifier) {
       return cell
     } else {
-      return UITableViewCell(style: .Default, reuseIdentifier: cellIdentifier)
+      return UITableViewCell(style: .Subtitle, reuseIdentifier: cellIdentifier)
     }
   }
 
@@ -67,6 +72,17 @@ class AllListsViewController: UITableViewController, ListDetailViewControllerDel
     let checklist = dataModel.lists[indexPath.row]
     cell.textLabel!.text = checklist.name
     cell.accessoryType = .DetailDisclosureButton
+    
+    if checklist.items.isEmpty {
+      cell.detailTextLabel!.text = "No items"
+    } else {
+      let count = checklist.countUncheckedItems()
+      if count == 0 {
+        cell.detailTextLabel!.text = "All Done!"
+      } else {
+        cell.detailTextLabel!.text = "\(count) Remaining"
+      }
+    }
 
     return cell
   }
