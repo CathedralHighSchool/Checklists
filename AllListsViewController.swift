@@ -74,7 +74,7 @@ class AllListsViewController: UITableViewController, ListDetailViewControllerDel
     cell.accessoryType = .DetailDisclosureButton
     
     if checklist.items.isEmpty {
-      cell.detailTextLabel!.text = "No items"
+      cell.detailTextLabel!.text = "(No items)"
     } else {
       let count = checklist.countUncheckedItems()
       if count == 0 {
@@ -83,7 +83,8 @@ class AllListsViewController: UITableViewController, ListDetailViewControllerDel
         cell.detailTextLabel!.text = "\(count) Remaining"
       }
     }
-
+    
+    cell.imageView!.image = UIImage(named: checklist.iconName)
     return cell
   }
   
